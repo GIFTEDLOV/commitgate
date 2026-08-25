@@ -1,0 +1,14 @@
+[project]
+name = "commitgate"
+version = "1.0.0"
+description = "Challenge-aware GenLayer software release authorization"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers -p no:cacheprovider"
+markers = [
+  "direct: GenLayer Direct Mode contract test",
+  "multivalidator: production-shaped independent-validator test",
+  "mutation: targeted security mutation gate",
+]

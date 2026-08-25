@@ -1,0 +1,68 @@
+{
+  "killed": 10,
+  "results": [
+    {
+      "killed": true,
+      "name": "skip_repo_match",
+      "returncode": 1,
+      "test": "tests/test_evidence.py::test_wrong_repository_commit_binding_is_integrity_error"
+    },
+    {
+      "killed": true,
+      "name": "skip_lineage_check",
+      "returncode": 1,
+      "test": "tests/test_evidence.py::test_invalid_or_unrelated_lineage_rejected"
+    },
+    {
+      "killed": true,
+      "name": "accept_short_sha",
+      "returncode": 1,
+      "test": "tests/test_core_validation.py::test_sha_must_be_exact_lowercase_40_hex"
+    },
+    {
+      "killed": true,
+      "name": "accept_arbitrary_challenge_path",
+      "returncode": 1,
+      "test": "tests/test_core_validation.py::test_challenge_path_prefix_is_mandatory"
+    },
+    {
+      "killed": true,
+      "name": "trust_leader_verdict",
+      "returncode": 1,
+      "test": "tests/test_contract_invariants.py::test_independent_validator_derives_same_evidence_and_semantics"
+    },
+    {
+      "killed": true,
+      "name": "map_evidence_failure_away_from_evidence_error",
+      "returncode": 1,
+      "test": "tests/test_evidence.py::test_missing_review_content_is_evidence_failure"
+    },
+    {
+      "killed": true,
+      "name": "skip_challenge_deadline",
+      "returncode": 1,
+      "test": "tests/test_contract_invariants.py::test_challenge_and_response_access_deadlines_are_deterministic"
+    },
+    {
+      "killed": true,
+      "name": "finalize_provisional_early",
+      "returncode": 1,
+      "test": "tests/test_contract_invariants.py::test_challenge_and_response_access_deadlines_are_deterministic"
+    },
+    {
+      "killed": true,
+      "name": "ignore_final_target_match",
+      "returncode": 1,
+      "test": "tests/test_contract_invariants.py::test_consumer_rereads_exact_gate_and_authorization_before_action"
+    },
+    {
+      "killed": true,
+      "name": "bypass_consumer_authorization_check",
+      "returncode": 1,
+      "test": "tests/test_contract_invariants.py::test_consumer_rereads_exact_gate_and_authorization_before_action"
+    }
+  ],
+  "schema": "commitgate-mutation-report-v1",
+  "survived": 0,
+  "total": 10
+}

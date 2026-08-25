@@ -1,0 +1,51 @@
+{
+  "schema": "commitgate-final-release-proof-v1",
+  "repository": {
+    "url": "https://github.com/GIFTEDLOV/commitgate",
+    "final_head": "",
+    "origin_main": "",
+    "worktree_clean": false
+  },
+  "contract": {
+    "source": "artifacts/commitgate_deployable.py",
+    "source_sha256": "c1b90fef5e3cd3891b657dfdb72cb0d47130450e0771fe404c8ad59f83936868",
+    "runner": "py-genlayer:9b8kjyda2ycxyq4ea6g4yfpnydxhd52gqba5rb8dw7krkh5mn9p0",
+    "deployment_address": "",
+    "deployment_tx": "",
+    "network": "testnet-bradbury",
+    "chain_id": 4221
+  },
+  "local_release_gates": {
+    "pure_and_adversarial": "86/86 PASS",
+    "direct_mode": "8/8 PASS",
+    "five_validator_glsim": "PASS",
+    "mutation": "10/10 KILLED",
+    "genvm_lint": "PASS",
+    "genvm_validation": "PASS_V03_SDK_SCHEMA",
+    "secret_scan": "PASS",
+    "diff_check": "PASS"
+  },
+  "bradbury": {
+    "status": "NOT_RUN",
+    "gate_id": "",
+    "target_sha": "",
+    "submission_tx": "",
+    "provisional_status": "",
+    "finalization_tx": "",
+    "execution_result": "",
+    "consensus_result": "",
+    "evidence_manifest_digest": "",
+    "assessment_digest": "",
+    "final_authorization_digest": "",
+    "consumer_proof": ""
+  },
+  "failed_or_superseded_attempts": [],
+  "ci": {
+    "run_id": "",
+    "head": "",
+    "result": "NOT_RUN",
+    "exact_head": false
+  },
+  "release_frozen": false,
+  "provenance_complete": false
+}
