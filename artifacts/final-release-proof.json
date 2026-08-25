@@ -2,9 +2,18 @@
   "schema": "commitgate-final-release-proof-v1",
   "repository": {
     "url": "https://github.com/GIFTEDLOV/commitgate",
+    "starting_head": "UNBORN",
     "final_head": "",
     "origin_main": "",
     "worktree_clean": false
+  },
+  "fixture": {
+    "base_commit_sha": "82a3775101d4815392375d22ff0a71feb62c944b",
+    "target_commit_sha": "0b552ac0c71367d6389cb9e231a58d11c7f77584",
+    "review_paths": [
+      "fixtures/release_guard.py"
+    ],
+    "policy_digest": "6e55e5cdf613e79aa38206184fbb1f4c4c3dc86104b13fe718afe6b8c91862b1"
   },
   "contract": {
     "source": "artifacts/commitgate_deployable.py",
