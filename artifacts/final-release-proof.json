@@ -19,8 +19,8 @@
     "source": "artifacts/commitgate_deployable.py",
     "source_sha256": "c1b90fef5e3cd3891b657dfdb72cb0d47130450e0771fe404c8ad59f83936868",
     "runner": "py-genlayer:9b8kjyda2ycxyq4ea6g4yfpnydxhd52gqba5rb8dw7krkh5mn9p0",
-    "deployment_address": "",
-    "deployment_tx": "",
+    "deployment_address": "0x4dEde009bb057a06afBa9Ed03389063d0601bDdd",
+    "deployment_tx": "0x09abe169acbba1eb5c45d667dcf1e1b19844a9247e5cee22fb5cc8419fa80549",
     "network": "testnet-bradbury",
     "chain_id": 4221
   },
@@ -35,7 +35,7 @@
     "diff_check": "PASS"
   },
   "bradbury": {
-    "status": "NOT_RUN",
+    "status": "DEPLOYMENT_FAILED_RUNTIME_INCOMPATIBILITY",
     "gate_id": "",
     "target_sha": "",
     "submission_tx": "",
@@ -48,7 +48,21 @@
     "final_authorization_digest": "",
     "consumer_proof": ""
   },
-  "failed_or_superseded_attempts": [],
+  "failed_or_superseded_attempts": [
+    {
+      "stage": "DEPLOYMENT",
+      "transaction_hash": "0x09abe169acbba1eb5c45d667dcf1e1b19844a9247e5cee22fb5cc8419fa80549",
+      "contract_address": "0x4dEde009bb057a06afBa9Ed03389063d0601bDdd",
+      "status": "FINALIZED",
+      "consensus_result": "AGREE",
+      "execution_result": "FINISHED_WITH_ERROR",
+      "validator_votes": "5/5 DISAGREE with the invalid leader execution result",
+      "trace_result_code": 2,
+      "error": "invalid_contract: runner py-genlayer:9b8kjyda2ycxyq4ea6g4yfpnydxhd52gqba5rb8dw7krkh5mn9p0 not found",
+      "observed_genvm": "v0.2.11-x86_64-linux-release",
+      "source_sha256": "c1b90fef5e3cd3891b657dfdb72cb0d47130450e0771fe404c8ad59f83936868"
+    }
+  ],
   "ci": {
     "run_id": "",
     "head": "",

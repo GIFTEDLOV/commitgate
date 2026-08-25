@@ -33,9 +33,8 @@ The public fixture is part of this repository and has exact immutable history:
   `6e55e5cdf613e79aa38206184fbb1f4c4c3dc86104b13fe718afe6b8c91862b1`
 
 The base permits every actor. The target changes only the bounded review path and
-requires both immutable authorization facts. Repository publication is still
-pending; these commits are not claimed as GitHub evidence until the public remote
-serves both exact SHAs.
+requires both immutable authorization facts. The public remote serves both exact
+SHAs.
 
 The single representative live proof must show creation, activation, submission,
 repository/lineage/content authentication, independent validator adjudication,
@@ -44,11 +43,18 @@ authorization digest, and downstream exact-target acceptance.
 
 ## Current status
 
-Bradbury deployment and lifecycle are pending an exact-head public GitHub repository,
-exact-head CI, and available authenticated deployment account state. No successful
-live behavior is claimed until `artifacts/final-release-proof.json`
-contains reconciled hashes, execution result names, consensus results, state reads,
-and digests.
+The first deployment attempt, transaction
+`0x09abe169acbba1eb5c45d667dcf1e1b19844a9247e5cee22fb5cc8419fa80549`,
+finalized with consensus `AGREE` on `FINISHED_WITH_ERROR`. The trace is an
+`invalid_contract` error because Bradbury GenVM `v0.2.11` could not resolve the
+v0.3 runner pin `py-genlayer:9b8kjyda2ycxyq4ea6g4yfpnydxhd52gqba5rb8dw7krkh5mn9p0`.
+All five revealed votes were `DISAGREE` with the leader's invalid execution result.
+This transaction is a preserved failed attempt, not a deployment proof.
+
+The lifecycle remains pending a Bradbury-supported runner port, complete release-gate
+rerun, exact-head CI, and a new preconditioned one-time deployment. No successful live
+behavior is claimed until `artifacts/final-release-proof.json` contains reconciled
+hashes, execution result names, consensus results, state reads, and digests.
 
 Failed or superseded attempts must be appended to the proof artifact and never
 deleted for cosmetic reasons.
