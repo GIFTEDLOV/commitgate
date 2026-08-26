@@ -12,7 +12,44 @@ def install() -> None:
     import gltest.direct.loader as loader
     from gltest.direct.vm import VMContext
     original_load_module = loader._load_module
+    original_patch_run_nondet = loader._patch_run_nondet_for_direct_mode
     original_refresh_gl_message = VMContext._refresh_gl_message
+
+    def patch_runtime_for_direct_mode() -> None:
+        # The pinned v0.2 Direct harness can leave the SDK's production WASI
+        # run_nondet path installed. Reuse its normal Direct patch first, then
+        # enforce the same leader/captured-validator behavior when that patch
+        # is unavailable or was marked complete too early during SDK loading.
+        original_patch_run_nondet()
+        import genlayer.gl.vm as gl_vm
+        from gltest.direct import wasi_mock
+        from genlayer.py.types import Lazy
+
+        def direct_run_nondet(leader_fn, validator_fn, /, **_kwargs):
+            vm = wasi_mock.get_vm()
+            vm._in_nondet = True
+            try:
+                result = leader_fn()
+            finally:
+                vm._in_nondet = False
+            vm._captured_validators.append((result, leader_fn, validator_fn))
+            return result
+
+        def direct_run_nondet_unsafe(leader_fn, validator_fn, /):
+            return direct_run_nondet(leader_fn, validator_fn)
+
+        def lazy_run_nondet(leader_fn, validator_fn, /, **kwargs):
+            return Lazy(lambda: direct_run_nondet(leader_fn, validator_fn, **kwargs))
+
+        def lazy_run_nondet_unsafe(leader_fn, validator_fn, /):
+            return Lazy(lambda: direct_run_nondet_unsafe(leader_fn, validator_fn))
+
+        direct_run_nondet.lazy = lazy_run_nondet
+        direct_run_nondet_unsafe.lazy = lazy_run_nondet_unsafe
+        gl_vm.run_nondet = direct_run_nondet
+        gl_vm.run_nondet_unsafe = direct_run_nondet_unsafe
+        gl_vm._direct_mode_patched = True
+        gl_vm._direct_mode_unsafe_patched = True
 
     def refresh_gl_message(vm):
         # Some released v0.2 Direct builds refresh message_raw but leave the
@@ -132,4 +169,5 @@ def install() -> None:
     loader._inject_message_to_fd0 = inject_message_to_fd0
     loader._load_module = load_module
     loader._allocate_contract = allocate_contract
+    loader._patch_run_nondet_for_direct_mode = patch_runtime_for_direct_mode
     VMContext._refresh_gl_message = refresh_gl_message
