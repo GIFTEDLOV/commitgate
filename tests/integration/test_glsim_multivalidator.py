@@ -73,9 +73,26 @@ def deploy_exact_artifact(factory, account, transaction_context):
     return factory.build_contract(address, account=account)
 
 
+def install_client_signature_compatibility():
+    """Keep the pinned gltest wrappers compatible with the installed client."""
+    client = get_gl_client()
+    for method_name in ("write_contract",):
+        original = getattr(client, method_name)
+        supported = set(inspect.signature(original).parameters)
+
+        def compatible(*args, _original=original, _supported=supported, **kwargs):
+            return _original(
+                *args,
+                **{key: value for key, value in kwargs.items() if key in _supported},
+            )
+
+        setattr(client, method_name, compatible)
+
+
 def test_five_validator_rpc_lifecycle():
     first = context("2026-08-25T12:00:00Z")
     account = get_default_account()
+    install_client_signature_compatibility()
     # Older v0.2 gltest clients only recognize the retired AST base spelling
     # when discovering a file. Build the client factory directly from the
     # exact deployable artifact so this test still exercises that artifact.
