@@ -2,10 +2,12 @@
 
 import json
 import os
+from pathlib import Path
 import pytest
 
-from gltest import get_contract_factory, get_default_account, get_validator_factory
+from gltest import get_default_account, get_validator_factory
 from gltest.assertions import tx_execution_succeeded
+from gltest.contracts.contract_factory import ContractFactory
 from gltest.contracts.contract import read_contract_wrapper, write_contract_wrapper
 
 from tests.helpers import BASE, OWNER, REPO, TARGET, evidence_routes
@@ -39,7 +41,14 @@ def context(at: str):
 def test_five_validator_rpc_lifecycle():
     first = context("2026-08-25T12:00:00Z")
     account = get_default_account()
-    factory = get_contract_factory(contract_file_path="../artifacts/commitgate_deployable.py")
+    # Older v0.2 gltest clients only recognize the retired AST base spelling
+    # when discovering a file. Build the client factory directly from the
+    # exact deployable artifact so this test still exercises that artifact.
+    artifact_path = Path("artifacts/commitgate_deployable.py")
+    factory = ContractFactory(
+        contract_name="CommitGate",
+        contract_code=artifact_path.read_text(encoding="utf-8"),
+    )
     contract = factory.deploy(args=[], account=account, transaction_context=first)
     # Invoke exact ABI names through the low-level wrappers so this test remains
     # independent of client-side schema convenience generation.
