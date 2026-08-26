@@ -11,6 +11,28 @@ def install() -> None:
     import gltest.direct.loader as loader
     original_load_module = loader._load_module
 
+    def allocate_contract(contract_cls, vm, *args, **kwargs):
+        # The released loader's fallback constructor is reached on CPython
+        # 3.12 because it does not recognize the v0.2 contract storage shape.
+        # Allocate through the v0.2 descriptor directly so field setters retain
+        # the same storage-backed behavior as GenVM.
+        from genlayer.py.storage import ROOT_SLOT_ID
+        from genlayer.py.storage._internal.generate import (
+            ORIGINAL_INIT_ATTR,
+            Lit,
+            _storage_build,
+        )
+
+        descriptor = _storage_build(contract_cls, {})
+        assert not isinstance(descriptor, Lit)
+        slot = vm._storage.get_store_slot(ROOT_SLOT_ID)
+        instance = descriptor.get(slot, 0)
+        init = getattr(descriptor.cls, "__init__", contract_cls.__init__)
+        if hasattr(init, ORIGINAL_INIT_ATTR):
+            init = getattr(init, ORIGINAL_INIT_ATTR)
+        init(instance, *args, **kwargs)
+        return instance
+
     def load_module(contract_path):
         import genlayer.gl.genvm_contracts as contract_module
 
@@ -75,3 +97,4 @@ def install() -> None:
 
     loader._inject_message_to_fd0 = inject_message_to_fd0
     loader._load_module = load_module
+    loader._allocate_contract = allocate_contract
