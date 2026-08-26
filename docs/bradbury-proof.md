@@ -78,10 +78,19 @@ This transaction is a preserved failed attempt, not a deployment proof.
 
 The Bradbury-compatible runner port is complete at commit
 `0541f2be119e9bb73a87609f67af13f8159f8e80`. The exact-head release gate is green in
-CI run `32945387329`. Deployment and representative live proof remain pending a
-separate preconditioned one-time write; no successful live behavior is claimed until
-`artifacts/final-release-proof.json` contains reconciled deployment hashes, execution
-result names, consensus results, state reads, and digests.
+CI run `32945387329`. The corrected deployment and representative live proof remain
+in progress under the same-hash reconciliation protocol; no successful live behavior
+is claimed until `artifacts/final-release-proof.json` contains reconciled deployment
+hashes, execution result names, consensus results, state reads, and digests.
+
+The one corrected deployment broadcast was subsequently made from the verified
+exact-head tree. Transaction
+`0x60895de7b4a3f50525a6f83f0d5d3b676e413b36c0fcd6175faea622fed5e0d3` currently
+reports status `5` (`ACCEPTED`), execution `FINISHED_WITH_RETURN`, and address
+`0x3709b06c21c133093b93DC4DCCBc0445b5dc9849`. A read-only `get_gate_count` call
+returns `0`. It has not yet reached `FINALIZED`, so no gate lifecycle transaction
+has been sent and no live proof or submission-ready claim is made. The same hash
+must be reconciled after any restart; it must not be rebroadcast.
 
 Failed or superseded attempts must be appended to the proof artifact and never
 deleted for cosmetic reasons.

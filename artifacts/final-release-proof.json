@@ -5,7 +5,7 @@
     "starting_head": "9d7e5c23eabbfceb4efc8984a5167e464a1c75cc",
     "final_head": "0541f2be119e9bb73a87609f67af13f8159f8e80",
     "origin_main": "0541f2be119e9bb73a87609f67af13f8159f8e80",
-    "worktree_clean": true
+    "worktree_clean": false
   },
   "fixture": {
     "base_commit_sha": "82a3775101d4815392375d22ff0a71feb62c944b",
@@ -21,8 +21,8 @@
     "reviewed_source_sha256": "e51fd218d2472a85f97aa36576e43984a6103815746986fd6e09750dceedfc88",
     "generated_deployable_sha256": "e9f3165df78ed9b53ad8b4038e016b51ac45eb788edc857ffeaf182b2c1a29cb",
     "runner": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6",
-    "deployment_address": "",
-    "deployment_tx": "",
+    "deployment_address": "0x3709b06c21c133093b93DC4DCCBc0445b5dc9849",
+    "deployment_tx": "0x60895de7b4a3f50525a6f83f0d5d3b676e413b36c0fcd6175faea622fed5e0d3",
     "network": "testnet-bradbury",
     "chain_id": 4221
   },
@@ -37,14 +37,14 @@
     "diff_check": "PASS"
   },
   "bradbury": {
-    "status": "PORT_VALIDATED_PENDING_DEPLOYMENT",
+    "status": "DEPLOYMENT_ACCEPTED_PENDING_FINALIZATION",
     "gate_id": "",
     "target_sha": "",
     "submission_tx": "",
     "provisional_status": "",
     "finalization_tx": "",
-    "execution_result": "",
-    "consensus_result": "",
+    "execution_result": "FINISHED_WITH_RETURN",
+    "consensus_result": "AGREE",
     "evidence_manifest_digest": "",
     "assessment_digest": "",
     "final_authorization_digest": "",
