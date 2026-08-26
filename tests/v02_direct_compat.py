@@ -4,12 +4,46 @@ from __future__ import annotations
 
 import atexit
 import os
+import sys
 import tempfile
 
 
 def install() -> None:
     import gltest.direct.loader as loader
+    from gltest.direct.vm import VMContext
     original_load_module = loader._load_module
+    original_refresh_gl_message = VMContext._refresh_gl_message
+
+    def refresh_gl_message(vm):
+        # Some released v0.2 Direct builds refresh message_raw but leave the
+        # cached gl.message sender unchanged. Keep caller checks aligned with
+        # the VM's active sender for assignment and prank alike.
+        original_refresh_gl_message(vm)
+        gl_module = sys.modules.get("genlayer.gl")
+        if gl_module is None or getattr(gl_module, "message", None) is None:
+            return
+
+        from genlayer.py.types import Address, u256
+
+        sender = vm.sender
+        if isinstance(sender, bytes):
+            sender = Address(sender)
+        elif hasattr(sender, "as_bytes") and not isinstance(sender, Address):
+            sender = Address(sender.as_bytes)
+
+        origin = vm.origin
+        if isinstance(origin, bytes):
+            origin = Address(origin)
+        elif hasattr(origin, "as_bytes") and not isinstance(origin, Address):
+            origin = Address(origin.as_bytes)
+
+        gl_module.message = gl_module.MessageType(
+            contract_address=gl_module.message.contract_address,
+            sender_address=sender,
+            origin_address=origin,
+            value=u256(vm._value),
+            chain_id=u256(vm._chain_id),
+        )
 
     def allocate_contract(contract_cls, vm, *args, **kwargs):
         # The released loader's fallback constructor is reached on CPython
@@ -98,3 +132,4 @@ def install() -> None:
     loader._inject_message_to_fd0 = inject_message_to_fd0
     loader._load_module = load_module
     loader._allocate_contract = allocate_contract
+    VMContext._refresh_gl_message = refresh_gl_message

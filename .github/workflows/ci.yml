@@ -25,6 +25,7 @@ jobs:
       - name: Install pinned tooling
         run: |
           python -m pip install "genvm-linter==0.11.0"
+          python -m pip install "cloudpickle==3.1.2"
           python -m pip install "genlayer-test[sim] @ git+https://github.com/genlayerlabs/genlayer-testing-suite.git@343e3a358f9e235a93b49c60721ce7676585ff07"
 
       - name: Cache Bradbury-compatible GenVM runner bundle
