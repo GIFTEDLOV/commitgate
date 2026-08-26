@@ -41,7 +41,9 @@ assumptions or code from another GenLayer project.
   GitHub evidence and independently invokes the semantic evaluator. Checking only
   leader schema or plausibility is forbidden.
 - `gl.nondet.web.get`/`request` returns bounded response status, headers, and body.
-  CommitGate constructs only `https://api.github.com` URLs and rejects all 3xx.
+  CommitGate constructs only repository/commit URLs under `https://api.github.com`
+  and exact-file URLs under `https://raw.githubusercontent.com`; all 3xx responses
+  are rejected.
 - LLM output is parsed without repair. The pinned runtime may return either raw
   JSON text or an already parsed JSON object; CommitGate strictly accepts both
   surfaces only with one exact `verdict` key. Raw text uses duplicate-key detection;

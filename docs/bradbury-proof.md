@@ -66,31 +66,46 @@ all 16 expected public methods with no RPC error. This is the smallest verified
 runner target currently supported by both the official documentation and the
 live Bradbury-visible runtime; these are schema probes, not deployments.
 
+## Compact evidence read probe
+
+Before any replacement deployment, a read-only ordinary-HTTPS probe of the exact
+fixture endpoints returned HTTP 200 with these body sizes:
+
+| Endpoint | Bytes | Bound |
+|---|---:|---:|
+| repository metadata | 5,108 | 16,384 |
+| base Git Data commit | 909 | 32,768 |
+| target Git Data commit | 1,148 | 32,768 |
+| base raw review file | 196 | 24,576 |
+| target raw review file | 227 | 24,576 |
+
+No redirect was observed. The target Git Data object exposes the base as a direct
+parent, so the representative fixture fits the bounded ancestry path. This is a
+read-only response-shape check, not a semantic transaction or deployment proof.
+
 ## Current status
 
 The first deployment attempt, transaction
-`0x09abe169acbba1eb5c45d667dcf1e1b19844a9247e5cee22fb5cc8419fa80549`,
-finalized with consensus `AGREE` on `FINISHED_WITH_ERROR`. The trace is an
-`invalid_contract` error because Bradbury GenVM `v0.2.11` could not resolve the
-v0.3 runner pin `py-genlayer:9b8kjyda2ycxyq4ea6g4yfpnydxhd52gqba5rb8dw7krkh5mn9p0`.
-All five revealed votes were `DISAGREE` with the leader's invalid execution result.
-This transaction is a preserved failed attempt, not a deployment proof.
+`0x09abe169acbba1eb5c45d667dcf1e1b19844a9247e5cee22fb5cc8419fa80549`, remains a
+preserved finalized runner-resolution failure. The corrected deployment at
+`0x3709b06c21c133093b93DC4DCCBc0445b5dc9849` completed a gate lifecycle, but its
+semantic submission
+`0x03e59bc91dd08c11a0a8a5ff25852549331d9b255393d5d00cf877cc76b9fff5` finalized
+with `FINISHED_WITH_ERROR`, `DISAGREE`, and five
+`DETERMINISTIC_VIOLATION` votes. The trace error was:
+`EVIDENCE_ERROR: HTTP response exceeds bound`.
 
-The Bradbury-compatible runner port is complete at commit
-`0541f2be119e9bb73a87609f67af13f8159f8e80`. The exact-head release gate is green in
-CI run `32945387329`. The corrected deployment and representative live proof remain
-in progress under the same-hash reconciliation protocol; no successful live behavior
-is claimed until `artifacts/final-release-proof.json` contains reconciled deployment
-hashes, execution result names, consensus results, state reads, and digests.
+A read-only ordinary-HTTPS measurement of the same public fixture recorded the
+legacy base `/commits/{sha}` response at 229,774 bytes against the former
+196,608-byte body bound. The compact evidence repair replaces that heavy endpoint,
+the compare endpoint, and Contents JSON with bounded repository metadata, Git Data
+commit objects plus bounded parent traversal, and exact raw commit-pinned bytes.
+The same compact path is used for challenge evidence. This is a transport repair,
+not a semantic verdict change and not a weakening of authentication or model
+authority.
 
-The one corrected deployment broadcast was subsequently made from the verified
-exact-head tree. Transaction
-`0x60895de7b4a3f50525a6f83f0d5d3b676e413b36c0fcd6175faea622fed5e0d3` currently
-reports status `5` (`ACCEPTED`), execution `FINISHED_WITH_RETURN`, and address
-`0x3709b06c21c133093b93DC4DCCBc0445b5dc9849`. A read-only `get_gate_count` call
-returns `0`. It has not yet reached `FINALIZED`, so no gate lifecycle transaction
-has been sent and no live proof or submission-ready claim is made. The same hash
-must be reconciled after any restart; it must not be rebroadcast.
-
-Failed or superseded attempts must be appended to the proof artifact and never
-deleted for cosmetic reasons.
+The existing deployment and failed semantic transaction remain historical only and
+will not be retried. A replacement deployment is permitted only after the repaired
+source passes the complete release gate, exact-head CI, and a read-only Bradbury
+response-shape probe. Failed or superseded attempts must remain in the proof
+artifact and never be deleted for cosmetic reasons.

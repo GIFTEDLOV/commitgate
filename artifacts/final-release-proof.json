@@ -17,9 +17,9 @@
   },
   "contract": {
     "source": "artifacts/commitgate_deployable.py",
-    "source_sha256": "e9f3165df78ed9b53ad8b4038e016b51ac45eb788edc857ffeaf182b2c1a29cb",
+    "source_sha256": "f60e09fcb35acfeec1d00eebccc7f0e7c5fdce4af38b8a60316d8f7efaacd92c",
     "reviewed_source_sha256": "e51fd218d2472a85f97aa36576e43984a6103815746986fd6e09750dceedfc88",
-    "generated_deployable_sha256": "e9f3165df78ed9b53ad8b4038e016b51ac45eb788edc857ffeaf182b2c1a29cb",
+    "generated_deployable_sha256": "f60e09fcb35acfeec1d00eebccc7f0e7c5fdce4af38b8a60316d8f7efaacd92c",
     "runner": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6",
     "deployment_address": "0x3709b06c21c133093b93DC4DCCBc0445b5dc9849",
     "deployment_tx": "0x60895de7b4a3f50525a6f83f0d5d3b676e413b36c0fcd6175faea622fed5e0d3",
@@ -37,7 +37,9 @@
     "diff_check": "PASS"
   },
   "bradbury": {
-    "status": "LIVE_PROOF_BLOCKED_SUBMISSION_EVIDENCE_ERROR",
+    "status": "TRANSPORT_FIX_VALIDATED_PREDEPLOY",
+    "old_deployment_superseded": true,
+    "old_deployment_superseded_reason": "verified production evidence-transport defect; retained for historical provenance",
     "create_tx": "0xeec08911a2e9b597c8de417a00031f249db82b63da4e92ccb30f6868b719bc43",
     "create_status": "FINALIZED_FINISHED_WITH_ERROR",
     "create_consensus_result": "AGREE",
@@ -114,6 +116,19 @@
       "compare_old": 200,
       "base_contents_old": 200,
       "target_contents_old": 200
+    },
+    "compact_evidence_probe": {
+      "status": "PASS_READ_ONLY",
+      "repository_metadata_bytes": 5108,
+      "repository_metadata_bound": 16384,
+      "base_git_commit_bytes": 909,
+      "target_git_commit_bytes": 1148,
+      "git_commit_bound": 32768,
+      "base_raw_review_bytes": 196,
+      "target_raw_review_bytes": 227,
+      "raw_review_bound": 24576,
+      "all_status_codes": 200,
+      "redirects_observed": false
     },
     "submission_id": "",
     "submission_verdict": "NOT_STORED_EXECUTION_ERROR",

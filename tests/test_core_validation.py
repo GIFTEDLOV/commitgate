@@ -6,8 +6,9 @@ from commitgate_core import (
     MAX_PATH_LENGTH,
     MAX_POLICY_BYTES,
     checked_deadline,
-    github_commit_url,
-    github_content_url,
+    github_git_commit_url,
+    github_raw_url,
+    github_repository_url,
     validate_gate_terms,
     validate_repo_component,
     validate_review_path,
@@ -86,14 +87,14 @@ def test_policy_criteria_and_window_bounds():
 
 def test_urls_are_constructed_commit_pinned_and_fixed_host():
     sha = "a" * 40
-    assert github_commit_url("owner", "repo", sha) == f"https://api.github.com/repos/owner/repo/commits/{sha}"
-    url = github_content_url("owner", "repo", "src/a.py", sha)
-    assert url == f"https://api.github.com/repos/owner/repo/contents/src/a.py?ref={sha}"
-    assert "main" not in url and "latest" not in url and "raw_url" not in url
+    assert github_repository_url("owner", "repo") == "https://api.github.com/repos/owner/repo"
+    assert github_git_commit_url("owner", "repo", sha) == f"https://api.github.com/repos/owner/repo/git/commits/{sha}"
+    url = github_raw_url("owner", "repo", "src/a.py", sha)
+    assert url == f"https://raw.githubusercontent.com/owner/repo/{sha}/src/a.py"
+    assert "main" not in url and "latest" not in url and "?ref=" not in url
 
 
 def test_checked_deadline_and_overflow():
     assert checked_deadline(100, 60) == 160
     with pytest.raises(GateError):
         checked_deadline(9_223_372_036_854_775_807, 1)
-

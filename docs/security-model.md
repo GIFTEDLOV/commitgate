@@ -33,7 +33,7 @@ become MODEL_ERROR. Nothing is repaired.
 
 ## Independent validator derivation
 
-The pinned current v0.3 runner uses `gl.vm.run_nondet` (the renamed unsafe custom
+The pinned Bradbury-compatible v0.2.12 runner uses `gl.vm.run_nondet` (the renamed unsafe custom
 validator surface). A leader constructs
 and retrieves the authenticated GitHub evidence, hashes exact content, invokes the
 model, and returns only the stable verdict/manifest/digests. Each validator

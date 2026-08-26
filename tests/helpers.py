@@ -1,10 +1,9 @@
-import base64
 import json
 
 from commitgate_core import (
-    github_commit_url,
-    github_compare_url,
-    github_content_url,
+    github_git_commit_url,
+    github_raw_url,
+    github_repository_url,
 )
 
 
@@ -16,6 +15,7 @@ RESPONSE = "3" * 40
 CHALLENGE = "4" * 40
 PATH = "src/guard.py"
 CHALLENGE_PATH = ".commitgate/challenges/authorization.md"
+REPO_ID = 987654321
 
 
 class MockFetch:
@@ -36,36 +36,20 @@ def response(value, status=200):
     return status, {}, body
 
 
-def commit(owner, repo, sha):
-    url = github_commit_url(owner, repo, sha)
+def repository(owner, repo, repository_id=REPO_ID):
+    return {
+        "id": repository_id,
+        "full_name": f"{owner}/{repo}",
+    }
+
+
+def commit(owner, repo, sha, parents=()):
+    url = github_git_commit_url(owner, repo, sha)
     return {
         "sha": sha,
         "url": url,
         "html_url": f"https://github.com/{owner}/{repo}/commit/{sha}",
-    }
-
-
-def compare(owner, repo, base, target):
-    return {
-        "status": "ahead",
-        "ahead_by": 1,
-        "behind_by": 0,
-        "base_commit": {"sha": base},
-        "merge_base_commit": {"sha": base},
-        "commits": [{"sha": target}],
-    }
-
-
-def content(owner, repo, sha, path, raw):
-    url = github_content_url(owner, repo, path, sha)
-    return {
-        "type": "file",
-        "path": path,
-        "url": url,
-        "download_url": f"https://raw.githubusercontent.com/{owner}/{repo}/{sha}/{path}",
-        "encoding": "base64",
-        "size": len(raw),
-        "content": base64.b64encode(raw).decode(),
+        "parents": [{"sha": parent} for parent in parents],
     }
 
 
@@ -79,10 +63,11 @@ def evidence_routes(
     target_content=b"def allowed(user):\n    return user.is_admin\n",
 ):
     return {
-        github_commit_url(owner, repo, base): response(commit(owner, repo, base)),
-        github_commit_url(owner, repo, target): response(commit(owner, repo, target)),
-        github_compare_url(owner, repo, base, target): response(compare(owner, repo, base, target)),
-        github_content_url(owner, repo, path, base): response(content(owner, repo, base, path, base_content)),
-        github_content_url(owner, repo, path, target): response(content(owner, repo, target, path, target_content)),
+        github_git_commit_url(owner, repo, base): response(commit(owner, repo, base)),
+        github_git_commit_url(owner, repo, target): response(commit(owner, repo, target, [base])),
+        github_raw_url(owner, repo, path, base): response(base_content),
+        github_raw_url(owner, repo, path, target): response(target_content),
+        # Keep the repository route last for the released GLSim mock matcher,
+        # which treats patterns as prefixes rather than exact URLs.
+        github_repository_url(owner, repo): response(repository(owner, repo)),
     }
-

@@ -45,7 +45,7 @@ and content digests first; consensus begins only after deterministic admissibili
 1. A creator commits immutable repository, base SHA, policy, criteria, review paths,
    parties, and bounded challenge/response windows, then activates the gate.
 2. Only the authorized submitter can submit an exact lowercase 40-hex target.
-3. Leader and validators independently call constructed GitHub API endpoints to
+3. Leader and validators independently call constructed GitHub endpoints to
    verify both commits in the declared repository, base→target ancestry, and exact
    base/target content at each immutable path.
 4. Exact decoded bytes are SHA-256 hashed into a canonical evidence manifest.
@@ -140,10 +140,11 @@ participant-authored content, not trusted facts. INCONCLUSIVE is not rejection, 
 infrastructure/model/consensus failures are not business verdicts. FINAL_APPROVED is
 challenge-aware, and the consumer rereads on-chain authorization.
 
-CommitGate constructs only three exact GitHub API endpoint families, accepts no URLs,
-rejects redirects, verifies base ancestry, bounds all inputs/responses, and stores
-only bounded manifests and digests. CI evidence is honestly excluded from V1 because
-stable public exact-SHA check evidence is not reliable enough without credentials.
+CommitGate constructs only three exact bounded endpoint families--repository metadata,
+Git Data commits, and commit-pinned raw files--accepts no URLs, rejects redirects,
+verifies bounded ancestry, bounds all inputs/responses, and stores only bounded
+manifests and digests. CI evidence is honestly excluded from V1 because stable public
+exact-SHA check evidence is not reliable enough without credentials.
 
 See [`docs/security-model.md`](docs/security-model.md) and
 [`docs/evidence-model.md`](docs/evidence-model.md).

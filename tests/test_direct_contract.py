@@ -6,7 +6,7 @@ from pathlib import Path
 import gltest.direct.sdk_loader as direct_sdk_loader
 from tests.v02_direct_compat import install as install_v02_direct_compat
 
-from commitgate_core import github_commit_url, github_compare_url, github_content_url
+from commitgate_core import github_git_commit_url, github_raw_url
 from tests.helpers import (
     CHALLENGE,
     CHALLENGE_PATH,
@@ -16,8 +16,6 @@ from tests.helpers import (
     RESPONSE,
     TARGET,
     commit,
-    compare,
-    content,
     evidence_routes,
     response,
 )
@@ -35,36 +33,27 @@ install_v02_direct_compat()
 
 def register_evidence_mocks(direct_vm):
     for url, (status, _headers, body) in evidence_routes().items():
-        direct_vm.mock_web(re.escape(url), {"status": status, "body": body.decode()})
+        direct_vm.mock_web(re.escape(url) + r"$", {"status": status, "body": body.decode()})
 
 
 def response_routes():
     routes = evidence_routes()
-    routes[github_commit_url(OWNER, REPO, CHALLENGE)] = response(commit(OWNER, REPO, CHALLENGE))
-    routes[github_compare_url(OWNER, REPO, TARGET, CHALLENGE)] = response(
-        compare(OWNER, REPO, TARGET, CHALLENGE)
+    routes[github_git_commit_url(OWNER, REPO, CHALLENGE)] = response(
+        commit(OWNER, REPO, CHALLENGE, [TARGET])
     )
     challenge_bytes = b"The guard may still allow an untrusted caller."
-    routes[github_content_url(OWNER, REPO, CHALLENGE_PATH, CHALLENGE)] = response(
-        content(OWNER, REPO, CHALLENGE, CHALLENGE_PATH, challenge_bytes)
-    )
-    routes[github_commit_url(OWNER, REPO, RESPONSE)] = response(commit(OWNER, REPO, RESPONSE))
-    routes[github_compare_url(OWNER, REPO, BASE, RESPONSE)] = response(
-        compare(OWNER, REPO, BASE, RESPONSE)
-    )
-    routes[github_compare_url(OWNER, REPO, TARGET, RESPONSE)] = response(
-        compare(OWNER, REPO, TARGET, RESPONSE)
+    routes[github_raw_url(OWNER, REPO, CHALLENGE_PATH, CHALLENGE)] = response(challenge_bytes)
+    routes[github_git_commit_url(OWNER, REPO, RESPONSE)] = response(
+        commit(OWNER, REPO, RESPONSE, [TARGET])
     )
     response_bytes = b"def allowed(user):\n    return user.is_admin and user.is_active\n"
-    routes[github_content_url(OWNER, REPO, PATH, RESPONSE)] = response(
-        content(OWNER, REPO, RESPONSE, PATH, response_bytes)
-    )
+    routes[github_raw_url(OWNER, REPO, PATH, RESPONSE)] = response(response_bytes)
     return routes
 
 
 def register_response_mocks(direct_vm):
     for url, (status, _headers, body) in response_routes().items():
-        direct_vm.mock_web(re.escape(url), {"status": status, "body": body.decode()})
+        direct_vm.mock_web(re.escape(url) + r"$", {"status": status, "body": body.decode()})
 
 
 def active_gate(direct_vm, direct_deploy, submitter, challenger):
@@ -233,9 +222,9 @@ def test_direct_wrong_callers_expiry_and_technical_response_failure(
     direct_vm.sender = direct_alice
     direct_vm.clear_mocks()
     routes = response_routes()
-    routes[github_commit_url(OWNER, REPO, RESPONSE)] = response({}, 503)
+    routes[github_git_commit_url(OWNER, REPO, RESPONSE)] = response({}, 503)
     for url, (status, _headers, body) in routes.items():
-        direct_vm.mock_web(re.escape(url), {"status": status, "body": body.decode()})
+            direct_vm.mock_web(re.escape(url) + r"$", {"status": status, "body": body.decode()})
     direct_vm.mock_llm(r".*", '{"verdict":"APPROVE"}')
     with direct_vm.expect_revert("EVIDENCE_ERROR"):
         contract.respond(gate_id, RESPONSE)

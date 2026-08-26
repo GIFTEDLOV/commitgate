@@ -36,9 +36,9 @@ MUTATIONS = [
     Mutation(
         "skip_lineage_check",
         "contracts/commitgate_core.py",
-        'data.get("status") != "ahead"',
-        'False',
-        "tests/test_evidence.py::test_invalid_or_unrelated_lineage_rejected",
+        'if current == base_sha:',
+        'if False and current == base_sha:',
+        "tests/test_evidence.py::test_direct_child_lineage_passes",
     ),
     Mutation(
         "accept_short_sha",
@@ -157,4 +157,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

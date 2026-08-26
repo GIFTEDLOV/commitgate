@@ -6,8 +6,6 @@ built from this file plus ``commitgate.py`` so the same validated helpers are us
 on-chain and in ordinary unit tests.
 """
 
-import base64
-import binascii
 import hashlib
 import json
 import re
@@ -27,7 +25,10 @@ MAX_REVIEW_PATHS = 4
 MAX_PATH_LENGTH = 180
 MAX_REVIEW_FILE_BYTES = 24_576
 MAX_CHALLENGE_BYTES = 16_384
-MAX_HTTP_BODY_BYTES = 196_608
+MAX_REPOSITORY_METADATA_BYTES = 16_384
+MAX_COMMIT_OBJECT_BYTES = 32_768
+MAX_ANCESTRY_COMMITS = 128
+MAX_COMMIT_PARENTS = 8
 MAX_MODEL_RESPONSE_BYTES = 256
 MIN_CHALLENGE_WINDOW = 60
 MAX_CHALLENGE_WINDOW = 604_800
@@ -222,27 +223,25 @@ def require_transition(current: str, target: str) -> None:
         raise GateError("INTEGRITY_ERROR", f"invalid state transition {current}->{target}")
 
 
-def github_commit_url(owner: str, repo: str, sha: str) -> str:
+def github_repository_url(owner: str, repo: str) -> str:
+    validate_repo_component(owner, "repo_owner")
+    validate_repo_component(repo, "repo_name")
+    return f"{GITHUB_API_ORIGIN}/repos/{owner}/{repo}"
+
+
+def github_git_commit_url(owner: str, repo: str, sha: str) -> str:
     validate_repo_component(owner, "repo_owner")
     validate_repo_component(repo, "repo_name")
     validate_sha(sha)
-    return f"{GITHUB_API_ORIGIN}/repos/{owner}/{repo}/commits/{sha}"
+    return f"{GITHUB_API_ORIGIN}/repos/{owner}/{repo}/git/commits/{sha}"
 
 
-def github_compare_url(owner: str, repo: str, base_sha: str, target_sha: str) -> str:
-    validate_repo_component(owner, "repo_owner")
-    validate_repo_component(repo, "repo_name")
-    validate_sha(base_sha, "base_commit_sha")
-    validate_sha(target_sha, "target_commit_sha")
-    return f"{GITHUB_API_ORIGIN}/repos/{owner}/{repo}/compare/{base_sha}...{target_sha}"
-
-
-def github_content_url(owner: str, repo: str, path: str, sha: str) -> str:
+def github_raw_url(owner: str, repo: str, path: str, sha: str) -> str:
     validate_repo_component(owner, "repo_owner")
     validate_repo_component(repo, "repo_name")
     path = validate_review_path(path)
     validate_sha(sha)
-    return f"{GITHUB_API_ORIGIN}/repos/{owner}/{repo}/contents/{path}?ref={sha}"
+    return f"{GITHUB_RAW_ORIGIN}/{owner}/{repo}/{sha}/{path}"
 
 
 def _pairs_no_duplicates(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -254,7 +253,7 @@ def _pairs_no_duplicates(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     return result
 
 
-def parse_json_bytes(body: bytes, *, maximum: int = MAX_HTTP_BODY_BYTES) -> Any:
+def parse_json_bytes(body: bytes, *, maximum: int) -> Any:
     if not isinstance(body, bytes):
         raise GateError("EVIDENCE_ERROR", "HTTP body is not bytes")
     if len(body) > maximum:
@@ -271,7 +270,7 @@ def parse_json_bytes(body: bytes, *, maximum: int = MAX_HTTP_BODY_BYTES) -> Any:
 Fetch = Callable[[str], tuple[int, dict[str, str], bytes]]
 
 
-def _fetch_json(fetch: Fetch, url: str) -> dict[str, Any]:
+def _fetch_body(fetch: Fetch, url: str, *, maximum: int) -> bytes:
     try:
         status, _headers, body = fetch(url)
     except GateError:
@@ -288,77 +287,99 @@ def _fetch_json(fetch: Fetch, url: str) -> dict[str, Any]:
         raise GateError("INTEGRITY_ERROR", "redirects are not admissible")
     if status != 200:
         raise GateError("EVIDENCE_ERROR", f"GitHub HTTP {status}")
-    value = parse_json_bytes(body)
+    if not isinstance(body, bytes):
+        raise GateError("EVIDENCE_ERROR", "HTTP body is not bytes")
+    if len(body) > maximum:
+        raise GateError("EVIDENCE_ERROR", "HTTP response exceeds bound")
+    return body
+
+
+def _fetch_json(fetch: Fetch, url: str, *, maximum: int) -> dict[str, Any]:
+    body = _fetch_body(fetch, url, maximum=maximum)
+    value = parse_json_bytes(body, maximum=maximum)
     if not isinstance(value, dict):
         raise GateError("EVIDENCE_ERROR", "GitHub response must be an object")
     return value
 
 
-def verify_commit(fetch: Fetch, owner: str, repo: str, sha: str) -> None:
-    url = github_commit_url(owner, repo, sha)
-    data = _fetch_json(fetch, url)
+def verify_repository(fetch: Fetch, owner: str, repo: str) -> int:
+    url = github_repository_url(owner, repo)
+    data = _fetch_json(fetch, url, maximum=MAX_REPOSITORY_METADATA_BYTES)
+    repository_id = data.get("id")
+    if (
+        not isinstance(repository_id, int)
+        or isinstance(repository_id, bool)
+        or repository_id <= 0
+        or data.get("full_name") != f"{owner}/{repo}"
+    ):
+        raise GateError("INTEGRITY_ERROR", "repository identity mismatch")
+    return repository_id
+
+
+def verify_commit(fetch: Fetch, owner: str, repo: str, sha: str) -> dict[str, Any]:
+    url = github_git_commit_url(owner, repo, sha)
+    data = _fetch_json(fetch, url, maximum=MAX_COMMIT_OBJECT_BYTES)
     html_url = f"https://github.com/{owner}/{repo}/commit/{sha}"
-    if data.get("sha") != sha or data.get("url") != url or data.get("html_url") != html_url:
+    parents = data.get("parents")
+    if (
+        data.get("sha") != sha
+        or data.get("url") != url
+        or data.get("html_url") != html_url
+        or not isinstance(parents, list)
+        or len(parents) > MAX_COMMIT_PARENTS
+    ):
         raise GateError("INTEGRITY_ERROR", "commit identity or repository binding mismatch")
+    for parent in parents:
+        if not isinstance(parent, dict):
+            raise GateError("INTEGRITY_ERROR", "commit parent shape mismatch")
+        validate_sha(parent.get("sha"), "parent_commit_sha")
+    return data
 
 
-def verify_lineage(fetch: Fetch, owner: str, repo: str, base_sha: str, target_sha: str, *, allow_equal: bool = False) -> None:
+def verify_lineage(
+    fetch: Fetch,
+    owner: str,
+    repo: str,
+    base_sha: str,
+    target_sha: str,
+    *,
+    allow_equal: bool = False,
+) -> int:
     validate_sha(base_sha, "base_commit_sha")
     validate_sha(target_sha, "target_commit_sha")
+    repository_id = verify_repository(fetch, owner, repo)
     if base_sha == target_sha:
-        if allow_equal:
-            return
-        raise GateError("INTEGRITY_ERROR", "base and target commits must differ")
-    verify_commit(fetch, owner, repo, base_sha)
-    verify_commit(fetch, owner, repo, target_sha)
-    url = github_compare_url(owner, repo, base_sha, target_sha)
-    data = _fetch_json(fetch, url)
-    base_obj = data.get("base_commit")
-    merge_obj = data.get("merge_base_commit")
-    commits = data.get("commits")
-    if (
-        data.get("status") != "ahead"
-        or data.get("behind_by") != 0
-        or not isinstance(data.get("ahead_by"), int)
-        or data.get("ahead_by", 0) < 1
-        or not isinstance(base_obj, dict)
-        or base_obj.get("sha") != base_sha
-        or not isinstance(merge_obj, dict)
-        or merge_obj.get("sha") != base_sha
-        or not isinstance(commits, list)
-        or not commits
-        or not isinstance(commits[-1], dict)
-        or commits[-1].get("sha") != target_sha
-    ):
-        raise GateError("INTEGRITY_ERROR", "target is not a descendant of the required base")
+        if not allow_equal:
+            raise GateError("INTEGRITY_ERROR", "base and target commits must differ")
+        verify_commit(fetch, owner, repo, target_sha)
+        return repository_id
+    queue = [target_sha]
+    queued = {target_sha}
+    visited: set[str] = set()
+    while queue:
+        if len(visited) >= MAX_ANCESTRY_COMMITS:
+            raise GateError("EVIDENCE_ERROR", "lineage unavailable within traversal bound")
+        current = queue.pop(0)
+        queued.discard(current)
+        if current in visited:
+            continue
+        commit_data = verify_commit(fetch, owner, repo, current)
+        visited.add(current)
+        if current == base_sha:
+            return repository_id
+        for parent in commit_data["parents"]:
+            parent_sha = parent["sha"]
+            if parent_sha not in visited and parent_sha not in queued:
+                if len(queue) >= MAX_ANCESTRY_COMMITS:
+                    raise GateError("EVIDENCE_ERROR", "lineage unavailable within traversal bound")
+                queue.append(parent_sha)
+                queued.add(parent_sha)
+    raise GateError("INTEGRITY_ERROR", "target is not a descendant of the required base")
 
 
 def fetch_content(fetch: Fetch, owner: str, repo: str, path: str, sha: str, *, maximum: int) -> bytes:
-    url = github_content_url(owner, repo, path, sha)
-    data = _fetch_json(fetch, url)
-    expected_download = f"{GITHUB_RAW_ORIGIN}/{owner}/{repo}/{sha}/{path}"
-    if (
-        data.get("type") != "file"
-        or data.get("path") != path
-        or data.get("url") != url
-        or data.get("download_url") != expected_download
-        or data.get("encoding") != "base64"
-        or not isinstance(data.get("content"), str)
-        or not isinstance(data.get("size"), int)
-    ):
-        raise GateError("INTEGRITY_ERROR", "content identity or encoding mismatch")
-    if data["size"] < 0 or data["size"] > maximum:
-        raise GateError("EVIDENCE_ERROR", "content exceeds deterministic bound")
-    encoded = data["content"].replace("\n", "")
-    if any(char.isspace() for char in encoded):
-        raise GateError("INTEGRITY_ERROR", "unexpected base64 whitespace")
-    try:
-        content = base64.b64decode(encoded.encode("ascii"), validate=True)
-    except (UnicodeError, binascii.Error) as exc:
-        raise GateError("INTEGRITY_ERROR", "invalid base64 content") from exc
-    if len(content) != data["size"] or len(content) > maximum:
-        raise GateError("INTEGRITY_ERROR", "content size mismatch")
-    return content
+    url = github_raw_url(owner, repo, path, sha)
+    return _fetch_body(fetch, url, maximum=maximum)
 
 
 def collect_review_evidence(
@@ -370,7 +391,7 @@ def collect_review_evidence(
     review_paths: list[str],
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     paths = validate_review_paths(review_paths)
-    verify_lineage(fetch, owner, repo, base_sha, target_sha)
+    repository_id = verify_lineage(fetch, owner, repo, base_sha, target_sha)
     entries: list[dict[str, Any]] = []
     semantic_inputs: list[dict[str, Any]] = []
     for path in paths:
@@ -399,6 +420,7 @@ def collect_review_evidence(
         "schema": SCHEMA_VERSION,
         "repo_owner": owner,
         "repo_name": repo,
+        "github_repository_id": repository_id,
         "base_commit_sha": base_sha,
         "target_commit_sha": target_sha,
         "review_paths": paths,
@@ -418,7 +440,9 @@ def collect_challenge_evidence(
     challenge_path: str,
 ) -> tuple[dict[str, Any], str]:
     path = validate_review_path(challenge_path, challenge=True)
-    verify_lineage(fetch, owner, repo, target_sha, challenge_sha, allow_equal=True)
+    repository_id = verify_lineage(
+        fetch, owner, repo, target_sha, challenge_sha, allow_equal=True
+    )
     content = fetch_content(fetch, owner, repo, path, challenge_sha, maximum=MAX_CHALLENGE_BYTES)
     try:
         text = content.decode("utf-8", "strict")
@@ -428,6 +452,7 @@ def collect_challenge_evidence(
         "schema": "commitgate-challenge-v1",
         "repo_owner": owner,
         "repo_name": repo,
+        "github_repository_id": repository_id,
         "challenged_target_sha": target_sha,
         "challenge_commit_sha": challenge_sha,
         "challenge_path": path,

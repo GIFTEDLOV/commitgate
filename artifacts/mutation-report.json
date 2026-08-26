@@ -4,14 +4,14 @@
     {
       "killed": true,
       "name": "skip_repo_match",
-      "returncode": 1,
+      "returncode": 4,
       "test": "tests/test_evidence.py::test_wrong_repository_commit_binding_is_integrity_error"
     },
     {
       "killed": true,
       "name": "skip_lineage_check",
       "returncode": 1,
-      "test": "tests/test_evidence.py::test_invalid_or_unrelated_lineage_rejected"
+      "test": "tests/test_evidence.py::test_direct_child_lineage_passes"
     },
     {
       "killed": true,
