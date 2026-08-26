@@ -3,8 +3,8 @@
   "repository": {
     "url": "https://github.com/GIFTEDLOV/commitgate",
     "starting_head": "9d7e5c23eabbfceb4efc8984a5167e464a1c75cc",
-    "final_head": "0541f2be119e9bb73a87609f67af13f8159f8e80",
-    "origin_main": "0541f2be119e9bb73a87609f67af13f8159f8e80",
+    "final_head": "574eb1b8a5627e5f438ea3fcce35778418c98931",
+    "origin_main": "9eb38e444dbf58ebcb6bdde6e54d6e1af1f03948",
     "worktree_clean": false
   },
   "fixture": {
@@ -21,13 +21,15 @@
     "reviewed_source_sha256": "e51fd218d2472a85f97aa36576e43984a6103815746986fd6e09750dceedfc88",
     "generated_deployable_sha256": "f60e09fcb35acfeec1d00eebccc7f0e7c5fdce4af38b8a60316d8f7efaacd92c",
     "runner": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6",
+    "transport_fix_commit": "574eb1b8a5627e5f438ea3fcce35778418c98931",
+    "transport_fix_scope": "contracts/commitgate_core.py evidence transport only; contract/semantic authority unchanged",
     "deployment_address": "0x3709b06c21c133093b93DC4DCCBc0445b5dc9849",
     "deployment_tx": "0x60895de7b4a3f50525a6f83f0d5d3b676e413b36c0fcd6175faea622fed5e0d3",
     "network": "testnet-bradbury",
     "chain_id": 4221
   },
   "local_release_gates": {
-    "pure_and_adversarial": "94/94 PASS",
+    "pure_and_adversarial": "98/98 PASS",
     "direct_mode": "8/8 PASS",
     "five_validator_glsim": "PASS",
     "mutation": "10/10 KILLED",
