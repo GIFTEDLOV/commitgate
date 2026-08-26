@@ -123,6 +123,32 @@ def install() -> None:
                 return super().__getitem__(key)
 
         gl_module.message_raw = _DynamicMessageRaw(gl_module.message_raw)
+
+        import genlayer.gl.nondet.web as web_module
+        original_web_get = getattr(web_module.get, "_commitgate_v02_original", web_module.get)
+
+        def direct_web_get(url, *, headers=None):
+            vm = wasi_mock.get_vm()
+            mock = vm._match_web_mock(url, "GET")
+            if mock is None:
+                return original_web_get(url, headers=headers or {})
+
+            response = mock.get("response", mock)
+            body = response.get("body", b"")
+            if isinstance(body, str):
+                body = body.encode("utf-8")
+            response_headers = {
+                key: value.encode("utf-8") if isinstance(value, str) else value
+                for key, value in response.get("headers", {}).items()
+            }
+            return web_module.Response(
+                status=int(response.get("status", 200)),
+                headers=response_headers,
+                body=body,
+            )
+
+        direct_web_get._commitgate_v02_original = original_web_get
+        web_module.get = direct_web_get
         return module
 
     def inject_message_to_fd0(vm) -> None:
