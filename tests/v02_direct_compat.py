@@ -25,6 +25,11 @@ def install() -> None:
         from gltest.direct import wasi_mock
         from genlayer.py.types import Lazy
 
+        # The pinned Direct helper still imports the former v0.3 module name
+        # while replaying captured validators. Point that test-only import at
+        # the actual v0.2 VM module and preserve its result/error classes.
+        sys.modules["genlayer.vm"] = gl_vm
+
         def direct_run_nondet(leader_fn, validator_fn, /, **_kwargs):
             vm = wasi_mock.get_vm()
             vm._in_nondet = True
