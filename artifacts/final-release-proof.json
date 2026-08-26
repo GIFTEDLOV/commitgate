@@ -3,9 +3,9 @@
   "repository": {
     "url": "https://github.com/GIFTEDLOV/commitgate",
     "starting_head": "9d7e5c23eabbfceb4efc8984a5167e464a1c75cc",
-    "final_head": "",
-    "origin_main": "",
-    "worktree_clean": false
+    "final_head": "0541f2be119e9bb73a87609f67af13f8159f8e80",
+    "origin_main": "0541f2be119e9bb73a87609f67af13f8159f8e80",
+    "worktree_clean": true
   },
   "fixture": {
     "base_commit_sha": "82a3775101d4815392375d22ff0a71feb62c944b",
@@ -66,10 +66,10 @@
     }
   ],
   "ci": {
-    "run_id": "",
-    "head": "",
-    "result": "NOT_RUN",
-    "exact_head": false
+    "run_id": "32945387329",
+    "head": "0541f2be119e9bb73a87609f67af13f8159f8e80",
+    "result": "SUCCESS",
+    "exact_head": true
   },
   "release_frozen": false,
   "provenance_complete": false

@@ -76,10 +76,12 @@ v0.3 runner pin `py-genlayer:9b8kjyda2ycxyq4ea6g4yfpnydxhd52gqba5rb8dw7krkh5mn9p
 All five revealed votes were `DISAGREE` with the leader's invalid execution result.
 This transaction is a preserved failed attempt, not a deployment proof.
 
-The lifecycle remains pending a Bradbury-supported runner port, complete release-gate
-rerun, exact-head CI, and a new preconditioned one-time deployment. No successful live
-behavior is claimed until `artifacts/final-release-proof.json` contains reconciled
-hashes, execution result names, consensus results, state reads, and digests.
+The Bradbury-compatible runner port is complete at commit
+`0541f2be119e9bb73a87609f67af13f8159f8e80`. The exact-head release gate is green in
+CI run `32945387329`. Deployment and representative live proof remain pending a
+separate preconditioned one-time write; no successful live behavior is claimed until
+`artifacts/final-release-proof.json` contains reconciled deployment hashes, execution
+result names, consensus results, state reads, and digests.
 
 Failed or superseded attempts must be appended to the proof artifact and never
 deleted for cosmetic reasons.
