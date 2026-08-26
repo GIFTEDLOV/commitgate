@@ -1,13 +1,17 @@
 """Production-shaped five-validator RPC test; enabled explicitly for GLSim."""
 
 import json
+import inspect
 import os
 from pathlib import Path
 import pytest
 
-from gltest import get_default_account, get_validator_factory
+from gltest import get_default_account, get_gl_client, get_validator_factory
 from gltest.assertions import tx_execution_succeeded
 from gltest.contracts.contract_factory import ContractFactory
+from gltest.types import TransactionStatus
+from gltest.utils import extract_contract_address
+from genlayer_py.types import SimConfig
 from gltest.contracts.contract import read_contract_wrapper, write_contract_wrapper
 
 from tests.helpers import BASE, OWNER, REPO, TARGET, evidence_routes
@@ -38,6 +42,37 @@ def context(at: str):
     return {"validators": [validator.to_dict() for validator in validators], "genvm_datetime": at}
 
 
+def deploy_exact_artifact(factory, account, transaction_context):
+    """Deploy exact artifact bytes across old/new gltest client signatures."""
+    client = get_gl_client()
+    sim_config = SimConfig(**transaction_context)
+    deploy_args = {
+        "code": factory.contract_code,
+        "args": [],
+        "account": account,
+        "consensus_max_rotations": None,
+        "leader_only": False,
+        "sim_config": sim_config,
+    }
+    deploy_signature = inspect.signature(client.deploy_contract)
+    deploy_kwargs = {
+        key: value
+        for key, value in deploy_args.items()
+        if key in deploy_signature.parameters
+    }
+    tx_hash = client.deploy_contract(**deploy_kwargs)
+
+    wait_args = {"transaction_hash": tx_hash, "status": TransactionStatus.ACCEPTED}
+    wait_signature = inspect.signature(client.wait_for_transaction_receipt)
+    wait_kwargs = {
+        key: value for key, value in wait_args.items() if key in wait_signature.parameters
+    }
+    receipt = client.wait_for_transaction_receipt(**wait_kwargs)
+    assert tx_execution_succeeded(receipt), receipt
+    address = extract_contract_address(receipt)
+    return factory.build_contract(address, account=account)
+
+
 def test_five_validator_rpc_lifecycle():
     first = context("2026-08-25T12:00:00Z")
     account = get_default_account()
@@ -49,7 +84,7 @@ def test_five_validator_rpc_lifecycle():
         contract_name="CommitGate",
         contract_code=artifact_path.read_text(encoding="utf-8"),
     )
-    contract = factory.deploy(args=[], account=account, transaction_context=first)
+    contract = deploy_exact_artifact(factory, account, first)
     # Invoke exact ABI names through the low-level wrappers so this test remains
     # independent of client-side schema convenience generation.
     create_receipt = write_contract_wrapper(
