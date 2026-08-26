@@ -20,7 +20,7 @@ def test_independent_validator_derives_same_evidence_and_semantics():
     assert "plausible" not in validator and "defensible" not in validator
 
 
-def test_equivalence_uses_custom_v02_unsafe_pattern():
+def test_equivalence_uses_custom_v02_pattern():
     assert CONTRACT.count("gl.vm.run_nondet(leader_fn, validator_fn)") == 2
     # JSON parsing and canonical round-tripping produce ordinary memory objects;
     # no TreeMap/storage proxy is captured by either closure.

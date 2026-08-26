@@ -19,6 +19,15 @@ def main() -> None:
     recorded = proof["contract"]["source_sha256"]
     if recorded:
         assert recorded == actual, f"contract source hash mismatch: {recorded} != {actual}"
+    reviewed_source = proof["contract"].get("reviewed_source_sha256", "")
+    if reviewed_source:
+        reviewed_actual = hashlib.sha256((ROOT / "contracts" / "commitgate.py").read_bytes()).hexdigest()
+        assert reviewed_source == reviewed_actual, (
+            f"reviewed source hash mismatch: {reviewed_source} != {reviewed_actual}"
+        )
+    generated = proof["contract"].get("generated_deployable_sha256", "")
+    if generated:
+        assert generated == actual, f"generated artifact hash mismatch: {generated} != {actual}"
     if proof["release_frozen"]:
         assert proof["provenance_complete"]
         assert proof["bradbury"]["status"] == "FINALIZED_SUCCESS"
@@ -28,4 +37,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

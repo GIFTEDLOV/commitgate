@@ -1,13 +1,12 @@
-# { "Depends": "py-genlayer:9b8kjyda2ycxyq4ea6g4yfpnydxhd52gqba5rb8dw7krkh5mn9p0" }
+# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
 """Reference consumer that fails closed on an immediate CommitGate read."""
 
-import genlayer as gl
-from genlayer.types import *
+from genlayer import *
 import hashlib
 import json
 import re
 
-@gl.contract.interface
+@gl.contract_interface
 class CommitGateInterface:
     class View:
         def get_gate(self, gate_id: str) -> str: ...
@@ -17,13 +16,13 @@ class CommitGateInterface:
         pass
 
 
-class CommitGateExecutionGate(gl.contract.Contract):
+class CommitGateExecutionGate(gl.Contract):
     commitgate_address: Address
     expected_repo_owner: str
     expected_repo_name: str
     one_shot: bool
-    consumed: gl.storage.TreeMap[str, str]
-    execution_records: gl.storage.TreeMap[str, str]
+    consumed: TreeMap[str, str]
+    execution_records: TreeMap[str, str]
 
     def __init__(
         self,

@@ -41,6 +41,31 @@ repository/lineage/content authentication, independent validator adjudication,
 PROVISIONAL_APPROVE, challenge-window enforcement, FINAL_APPROVED, the exact final
 authorization digest, and downstream exact-target acceptance.
 
+## Runtime reconciliation
+
+On 2026-08-26, the failed deployment was reread from Bradbury by hash. The
+receipt reports status `7` (`FINALIZED`) and `txExecutionResult` `2`; the same
+transaction's debug trace reports result code `2`, GenVM
+`v0.2.11-x86_64-linux-release`, and:
+
+`runner py-genlayer:9b8kjyda2ycxyq4ea6g4yfpnydxhd52gqba5rb8dw7krkh5mn9p0 not found`
+
+The receipt records five committed/revealed validator votes and no equivalence
+outputs. This confirms a finalized failed deployment, not a live contract. The
+transaction is never rebroadcast.
+
+Before selecting the replacement target, a read-only Bradbury
+`gen_getContractSchema` request was made with a minimal contract whose first
+line pinned:
+
+`py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6`
+
+Bradbury returned a valid schema for `Probe.get() -> int`. The same read-only
+method accepted the exact corrected CommitGate deployable artifact and returned
+all 16 expected public methods with no RPC error. This is the smallest verified
+runner target currently supported by both the official documentation and the
+live Bradbury-visible runtime; these are schema probes, not deployments.
+
 ## Current status
 
 The first deployment attempt, transaction

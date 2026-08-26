@@ -1,30 +1,27 @@
 # Runtime baseline
 
-Verified on 2026-08-25 before implementation. This repository did not inherit
-runtime assumptions or code from another GenLayer project.
+Reconciled on 2026-08-26 after power-loss recovery. This baseline combines the
+current official documentation, the exact cached official runner bundle, and a
+read-only Bradbury schema probe. This repository did not inherit runtime
+assumptions or code from another GenLayer project.
 
 ## Pinned execution surface
 
 - Local CLI: `genlayer 0.39.1`; selected network: `testnet-bradbury`.
 - Local testing: official `genlayer-testing-suite` commit
   `343e3a358f9e235a93b49c60721ce7676585ff07` (package version 0.29.2).
-  The released 0.29.2 loader is v0.2-only; the exact current official commit
-  adds the required v0.3 import/storage compatibility. Direct Mode is
-  unit/in-memory testing, while five-validator GLSim is the RPC integration
-  surface used here.
+  Its released Direct loader is v0.2-shaped. Direct Mode is unit/in-memory
+  testing, while five-validator GLSim is the RPC integration surface used here.
 - Local linter: `genvm-linter 0.11.0`; `check` combines AST lint and SDK semantic
   validation for v0.2. Its schema loader still imports the removed
   `genlayer.py.get_schema` path. CommitGate runs its unchanged AST lint and the
-  narrow `tools/genvm_v03_validate.py` compatibility shim, which uses the
-  linter's own artifact resolution and current official
-  `genlayer._internal.get_schema` import.
-- Contract runner: `py-genlayer:9b8kjyda2ycxyq4ea6g4yfpnydxhd52gqba5rb8dw7krkh5mn9p0`
-  (current official v0.3 runner). Initial implementation used the older documented
-  v0.2.4 pin, but current GenVM semantic validation could no longer resolve that
-  runner archive. That verified compatibility blocker required migration before
-  release rather than shipping a contract the current validator could not load.
-- Runner bundle: official `genlayerlabs/genvm-manager` release `v0.6.0-rc2`,
-  asset `genvm-universal.tar.xz`. CI pins and caches that exact release asset.
+  narrow `tools/genvm_v03_validate.py` compatibility shim with the exact v0.2.12
+  artifact bundle.
+- Contract runner: `py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6`.
+  This is the hash in the current official first-contract documentation and it
+  resolves in the official v0.2.12 bundle.
+- Runner bundle: official GenVM release `v0.2.12`, asset
+  `genvm-universal.tar.xz`. CI pins and caches that exact release asset.
 
 ## Current official rules applied
 
@@ -36,9 +33,10 @@ runtime assumptions or code from another GenLayer project.
   read or write contract storage.
 - Web and LLM calls belong inside an equivalence-principle block. Storage writes,
   contract calls, and message emission happen only after consensus returns.
-- For the pinned v0.3 runner, custom leader/validator consensus uses
-  `gl.vm.run_nondet` (the renamed v0.2 `run_nondet_unsafe` behavior). Validator exceptions count as disagreement and are
-  handled explicitly.
+- For the Bradbury-compatible v0.2.12 runner, custom leader/validator consensus
+  uses the sandboxed `gl.vm.run_nondet` API. The validator independently
+  refetches and derives the full result; validator exceptions are handled as
+  disagreement and cannot become an accepted result.
 - Independent verification is substantive: a validator refetches authenticated
   GitHub evidence and independently invokes the semantic evaluator. Checking only
   leader schema or plausibility is forbidden.
@@ -49,9 +47,9 @@ runtime assumptions or code from another GenLayer project.
   surfaces only with one exact `verdict` key. Raw text uses duplicate-key detection;
   a pre-parsed object cannot retain duplicate-key information, which is documented.
 - Transaction time is deterministic in ordinary contract execution and pinned to
-  the transaction timestamp. The current runner exposes it through
-  `gl.vm.get_timestamp()`; CommitGate reads it only outside nondeterministic
-  blocks.
+  the transaction timestamp. v0.2.12 exposes the raw ISO timestamp through
+  `gl.message_raw["datetime"]`; CommitGate parses that value only outside
+  nondeterministic blocks. It never reads host wall-clock time.
 - IC view calls are synchronous. The reference consumer rereads CommitGate in its
   write transaction; emitted writes would be asynchronous and are not used for the
   authorization decision.
@@ -75,13 +73,23 @@ runtime assumptions or code from another GenLayer project.
 - https://sdk.genlayer.com/main/_static/ai/api.txt
 - https://github.com/genlayerlabs/genvm-linter
 
-## Current documentation changes found
+## Bradbury runtime evidence
 
-The current SDK mainline has the v0.3 API: direct `import genlayer as gl`,
-`gl.contract.Contract`, and `gl.vm.run_nondet` replacing the v0.2 unsafe name.
-Current product documentation still contains some v0.2 examples. CommitGate first
-tested that older pin, recorded its validation failure, and migrated wholly to v0.3
-rather than mixing contract API generations. The current released linter and test
-package lag that runner; all test-only compatibility adapters are isolated under
-`tests/v03_direct_compat.py` and `tools/glsim_v03.py` and do not enter deployed
-source.
+- Official documentation, checked 2026-08-26:
+  `https://docs.genlayer.com/developers/intelligent-contracts/first-contract`
+  publishes the exact `py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6`
+  dependency and `from genlayer import *` API.
+- Bradbury read-only probe, checked 2026-08-26: `gen_getContractSchema` accepted
+  a minimal contract with that exact dependency and returned a schema containing
+  constructor `Probe()` and view `get() -> int`. This proves the hash is
+  resolvable by the current Bradbury-visible runtime; it is not a deployment.
+- The same read-only schema method accepted the exact corrected
+  `artifacts/commitgate_deployable.py` and returned all 16 expected public
+  methods with no RPC error. This verifies the intended artifact's runner/API
+  surface before any deployment broadcast.
+- Historical live transaction `0x09abe169acbba1eb5c45d667dcf1e1b19844a9247e5cee22fb5cc8419fa80549`
+  proved the old v0.3 hash was not resolvable on the observed Bradbury GenVM
+  `v0.2.11-x86_64-linux-release`; that failure remains immutable provenance.
+
+All compatibility adapters remain test-only under `tests/v02_direct_compat.py`
+and `tools/glsim_v02.py`; none enters deployed source.

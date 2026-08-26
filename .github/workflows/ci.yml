@@ -27,19 +27,19 @@ jobs:
           python -m pip install "genvm-linter==0.11.0"
           python -m pip install "genlayer-test[sim] @ git+https://github.com/genlayerlabs/genlayer-testing-suite.git@343e3a358f9e235a93b49c60721ce7676585ff07"
 
-      - name: Cache current GenVM runner bundle
+      - name: Cache Bradbury-compatible GenVM runner bundle
         uses: actions/cache@v4
         with:
           path: ~/.cache/genvm-linter
-          key: genvm-manager-v0.6.0-rc2
+          key: genvm-v0.2.12
 
-      - name: Fetch exact current GenVM runner bundle
+      - name: Fetch exact Bradbury-compatible GenVM runner bundle
         run: |
           mkdir -p "$HOME/.cache/genvm-linter"
-          BUNDLE="$HOME/.cache/genvm-linter/genvm-universal-genlayerlabs-genvm-manager-v0.6.0-rc2.tar.xz"
+          BUNDLE="$HOME/.cache/genvm-linter/genvm-universal-v0.2.12.tar.xz"
           if [ ! -f "$BUNDLE" ]; then
             curl --fail --location --retry 3 \
-              https://github.com/genlayerlabs/genvm-manager/releases/download/v0.6.0-rc2/genvm-universal.tar.xz \
+              https://github.com/genlayerlabs/genvm/releases/download/v0.2.12/genvm-universal.tar.xz \
               --output "$BUNDLE"
           fi
 
@@ -62,11 +62,11 @@ jobs:
       - name: Five-validator GLSim RPC test
         shell: bash
         run: |
-          python tools/glsim_v03.py --validators 5 --max-rotations 3 --seed commitgate-ci --no-browser > /tmp/commitgate-glsim.log 2>&1 &
+          python tools/glsim_v02.py --port 4011 --validators 5 --max-rotations 3 --seed commitgate-ci --no-browser > /tmp/commitgate-glsim.log 2>&1 &
           GLSIM_PID=$!
           trap 'kill "$GLSIM_PID" || true' EXIT
           for attempt in $(seq 1 30); do
-            if python -c "import httpx; raise SystemExit(0 if httpx.post('http://127.0.0.1:4000/api', json={'jsonrpc':'2.0','id':1,'method':'gen_syncing','params':[]}).status_code == 200 else 1)"; then break; fi
+            if python -c "import httpx; raise SystemExit(0 if httpx.post('http://127.0.0.1:4011/api', json={'jsonrpc':'2.0','id':1,'method':'gen_syncing','params':[]}).status_code == 200 else 1)"; then break; fi
             sleep 1
           done
           COMMITGATE_GLSIM=1 python -m pytest tests/integration/test_glsim_multivalidator.py -q

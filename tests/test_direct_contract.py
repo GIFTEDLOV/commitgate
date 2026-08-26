@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 
 import gltest.direct.sdk_loader as direct_sdk_loader
-from tests.v03_direct_compat import install as install_v03_direct_compat
+from tests.v02_direct_compat import install as install_v02_direct_compat
 
 from commitgate_core import github_commit_url, github_compare_url, github_content_url
 from tests.helpers import (
@@ -24,14 +24,13 @@ from tests.helpers import (
 
 
 ARTIFACT = "artifacts/commitgate_deployable.py"
-SDK_VERSION = "genlayerlabs-genvm-manager-v0.6.0-rc2"
+SDK_VERSION = "v0.2.12"
 BASE = "1" * 40
 
-# genlayer-test 0.29.2 still defaults to its v0.2 cache/release lookup. Reuse
-# the official current bundle already resolved by genvm-linter's artifact
-# loader so Direct Mode exercises the exact runner pinned by the contract.
+# Reuse the official v0.2.12 bundle resolved by genvm-linter so Direct Mode
+# exercises the Bradbury-shaped runner family accepted by the live RPC.
 direct_sdk_loader.CACHE_DIR = Path.home() / ".cache" / "genvm-linter"
-install_v03_direct_compat()
+install_v02_direct_compat()
 
 
 def register_evidence_mocks(direct_vm):

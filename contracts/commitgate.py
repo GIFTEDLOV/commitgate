@@ -1,13 +1,14 @@
-# { "Depends": "py-genlayer:9b8kjyda2ycxyq4ea6g4yfpnydxhd52gqba5rb8dw7krkh5mn9p0" }
+# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
 """CommitGate: challenge-aware software release authorization.
 
-This source targets the pinned current v0.3 Python runner.  The
+This source targets the exact runner published in current official GenLayer
+documentation and available on Bradbury GenVM v0.2.11.  The
 release script in ``tools/make_deployable.py`` inlines ``commitgate_core.py`` so
 the deployed artifact is a single independently reproducible file.
 """
 
-import genlayer as gl
-from genlayer.types import *
+from genlayer import *
+from datetime import datetime
 import json
 
 from commitgate_core import (
@@ -30,14 +31,14 @@ from commitgate_core import (
     verify_lineage,
 )
 
-class CommitGate(gl.contract.Contract):
-    gates: gl.storage.TreeMap[str, str]
-    submissions: gl.storage.TreeMap[str, str]
-    assessments: gl.storage.TreeMap[str, str]
-    challenges: gl.storage.TreeMap[str, str]
-    authorizations: gl.storage.TreeMap[str, str]
-    submitted_targets: gl.storage.TreeMap[str, str]
-    gate_ids: gl.storage.TreeMap[str, str]
+class CommitGate(gl.Contract):
+    gates: TreeMap[str, str]
+    submissions: TreeMap[str, str]
+    assessments: TreeMap[str, str]
+    challenges: TreeMap[str, str]
+    authorizations: TreeMap[str, str]
+    submitted_targets: TreeMap[str, str]
+    gate_ids: TreeMap[str, str]
     gate_count: u256
     submission_count: u256
     assessment_count: u256
@@ -50,7 +51,8 @@ class CommitGate(gl.contract.Contract):
         self.challenge_count = 0
 
     def _now(self) -> int:
-        return int(gl.vm.get_timestamp().timestamp())
+        raw = gl.message_raw["datetime"]
+        return int(datetime.fromisoformat(raw.replace("Z", "+00:00")).timestamp())
 
     def _sender(self) -> str:
         return validate_address(gl.message.sender_address, "caller")
@@ -58,9 +60,10 @@ class CommitGate(gl.contract.Contract):
     def _load_json(self, mapping, key: str, kind: str) -> dict:
         if key not in mapping:
             raise gl.vm.UserError(f"INTEGRITY_ERROR:unknown {kind}")
-        # TreeMap[str, str] returns a primitive memory string. copy_to_memory is
-        # reserved for storage proxy objects; parsing also produces an isolated
-        # memory value before nondeterministic execution.
+        # TreeMap[str, str] yields a primitive memory string, not a storage
+        # proxy (copy_to_memory asserts for primitives in the Bradbury SDK).
+        # JSON decoding then creates the isolated mutable memory object used by
+        # nondeterministic closures.
         raw = mapping[key]
         value = json.loads(raw)
         if not isinstance(value, dict):

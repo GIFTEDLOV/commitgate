@@ -1,9 +1,8 @@
-"""Validate a v0.3 contract with the exact SDK pinned in its header.
+"""Validate a v0.2.12 contract with the exact SDK pinned in its header.
 
-genvm-linter 0.11.0 downloads the current runner correctly but imports the
-removed v0.2 ``genlayer.py.get_schema`` path.  This narrow compatibility shim
-uses the linter's own artifact resolver and validator helpers, changing only
-that import to the current official ``genlayer._internal.get_schema`` path.
+The Bradbury-compatible v0.2.12 standard library exposes schema generation at
+``genlayer.py.get_schema``. This narrow validator uses the linter's artifact
+resolver and the exact v0.2.12 bundle selected for the contract.
 """
 
 from __future__ import annotations
@@ -24,16 +23,19 @@ from genvm_linter.validate.sdk_loader import (
 )
 
 
+GENVM_VERSION = "v0.2.12"
+
+
 def validate(contract_path: Path) -> dict:
     setup_wasi_mocks()
     dependencies = parse_contract_header(contract_path)
-    tarball = download_artifacts()
+    tarball = download_artifacts(GENVM_VERSION)
     sdk_paths, notes = extract_sdk_paths(tarball, dependencies)
     for path in reversed(sdk_paths):
         source = path / "src" if (path / "src").exists() else path
         sys.path.insert(0, str(source))
 
-    from genlayer._internal.get_schema import get_schema
+    from genlayer.py.get_schema import get_schema
 
     module = load_contract_module(contract_path)
     contract_class = find_contract_class(module)

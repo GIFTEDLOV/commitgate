@@ -88,7 +88,7 @@ Requirements are Python 3.12+, `genvm-linter 0.11.0`, and exact official
 `genlayer-testing-suite` commit
 `343e3a358f9e235a93b49c60721ce7676585ff07`. The commit pin is required because
 the released 0.29.2 Direct loader is v0.2-only; see the runtime baseline for the
-fully pinned runner bundle and compatibility rationale.
+fully pinned Bradbury-compatible v0.2.12 runner bundle and compatibility rationale.
 
 ```bash
 python tools/make_deployable.py
@@ -105,7 +105,7 @@ For the production-shaped local RPC test, start five-validator GLSim and explici
 enable the test:
 
 ```bash
-python tools/glsim_v03.py --validators 5 --max-rotations 3 --seed commitgate --no-browser
+python tools/glsim_v02.py --port 4011 --validators 5 --max-rotations 3 --seed commitgate --no-browser
 COMMITGATE_GLSIM=1 python -m pytest tests/integration/test_glsim_multivalidator.py -q
 ```
 
