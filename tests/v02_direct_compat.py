@@ -149,6 +149,30 @@ def install() -> None:
 
         direct_web_get._commitgate_v02_original = original_web_get
         web_module.get = direct_web_get
+
+        import genlayer.gl.nondet as nondet_module
+        original_exec_prompt = getattr(
+            nondet_module.exec_prompt,
+            "_commitgate_v02_original",
+            nondet_module.exec_prompt,
+        )
+
+        def direct_exec_prompt(prompt, **config):
+            vm = wasi_mock.get_vm()
+            mock = vm._match_llm_mock(prompt)
+            if mock is None:
+                return original_exec_prompt(prompt, **config)
+            if isinstance(mock, str):
+                import json
+
+                try:
+                    return json.loads(mock)
+                except (TypeError, ValueError):
+                    return mock
+            return mock
+
+        direct_exec_prompt._commitgate_v02_original = original_exec_prompt
+        nondet_module.exec_prompt = direct_exec_prompt
         return module
 
     def inject_message_to_fd0(vm) -> None:
