@@ -76,7 +76,7 @@ def deploy_exact_artifact(factory, account, transaction_context):
 def install_client_signature_compatibility():
     """Keep the pinned gltest wrappers compatible with the installed client."""
     client = get_gl_client()
-    for method_name in ("write_contract",):
+    for method_name in ("write_contract", "wait_for_transaction_receipt"):
         original = getattr(client, method_name)
         supported = set(inspect.signature(original).parameters)
 
@@ -86,6 +86,7 @@ def install_client_signature_compatibility():
                 **{key: value for key, value in kwargs.items() if key in _supported},
             )
 
+        compatible.__signature__ = inspect.signature(original)
         setattr(client, method_name, compatible)
 
 
