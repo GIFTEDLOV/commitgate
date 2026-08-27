@@ -109,3 +109,37 @@ will not be retried. A replacement deployment is permitted only after the repair
 source passes the complete release gate, exact-head CI, and a read-only Bradbury
 response-shape probe. Failed or superseded attempts must remain in the proof
 artifact and never be deleted for cosmetic reasons.
+
+## Replacement live proof
+
+The repaired artifact was deployed once at
+`0x6DaC39672bB4a3a684897FbEf31f131429D28023` by transaction
+`0x91cab49673eb657d6dce40966fa6fdfdef66516a482b495ce24c98b00f31cd74`.
+The transaction finalized successfully with `AGREE` and
+`FINISHED_WITH_RETURN`, and the initial gate count was zero.
+
+The one representative gate is
+`074843a3e30066338eec51d1d9e5a23481c6837891608467a402098f1ae43fbc`.
+Creation finalized in `0x8555dde31c6415455ff6a1682c2cf9d419aad23b13b9728fcaeea59dd496f534`;
+activation finalized in
+`0x77ada20ceb4144354a1e7a112ca0f038a4ca970ef318c10c868a84ea1e6845c8`.
+
+The exact target submission finalized in
+`0x91867d19c7c4a49d06ebaaa8248e62649cb6777907a447edbb57f29f14ad7ec9` with
+`AGREE`, `FINISHED_WITH_RETURN`, and verdict `APPROVE`. The actual validator vote
+sequence is preserved exactly: `AGREE, DETERMINISTIC_VIOLATION, AGREE, AGREE,
+TIMEOUT`. The stored evidence manifest digest is
+`dc85f338f46a424d88872cfbd53a1db69ec039b8cf686d3a307bacebc635e3c1`; the
+assessment digest is
+`93095bb54b1cc71af4c1c5b5bf6604c6cb78db9f89be7a61fdbe40c215cabe60`.
+
+After the stored 60-second challenge deadline, uncontested finalization finalized
+successfully in
+`0x0ee0757765039e9eb938fbbcc9f7abdb90197e0530b314d09a9c52fa7c144a0b` with
+five `AGREE` finalization votes. The gate is `FINAL_APPROVED` for target
+`0b552ac0c71367d6389cb9e231a58d11c7f77584`; its final authorization digest is
+`e679be060abb2574794a5066439f50e17a03d88fa6fbba44568cdef1709588b5`.
+
+The read-only reference consumer reread the live gate and authorization view,
+accepted the exact target and rejected a different target. All failed and superseded
+attempts remain recorded in `artifacts/final-release-proof.json`.

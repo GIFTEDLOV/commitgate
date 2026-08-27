@@ -124,13 +124,26 @@ finalize_uncontested(gate_id)                                             # if n
 
 The exact proof record is [`artifacts/final-release-proof.json`](artifacts/final-release-proof.json)
 and the transaction protocol is [`docs/bradbury-proof.md`](docs/bradbury-proof.md).
-Bradbury is a production-like testnet, not mainnet. No live success is claimed while
-the proof artifact says `NOT_RUN` or lacks finalized successful execution plus an
-expected state read.
+Bradbury is a production-like testnet, not mainnet.
 
-After all release gates and exact-head CI pass, one representative Bradbury lifecycle
-will be recorded without blind rebroadcasts or cosmetic reruns. Isolated validator
-divergence, failed transactions, and superseded attempts remain in provenance.
+The completed representative proof uses replacement contract
+`0x6DaC39672bB4a3a684897FbEf31f131429D28023` and gate
+`074843a3e30066338eec51d1d9e5a23481c6837891608467a402098f1ae43fbc`:
+
+- deployment: `0x91cab49673eb657d6dce40966fa6fdfdef66516a482b495ce24c98b00f31cd74`
+- create: `0x8555dde31c6415455ff6a1682c2cf9d419aad23b13b9728fcaeea59dd496f534`
+- activation: `0x77ada20ceb4144354a1e7a112ca0f038a4ca970ef318c10c868a84ea1e6845c8`
+- semantic submission: `0x91867d19c7c4a49d06ebaaa8248e62649cb6777907a447edbb57f29f14ad7ec9`
+- finalization: `0x0ee0757765039e9eb938fbbcc9f7abdb90197e0530b314d09a9c52fa7c144a0b`
+- result: `FINAL_APPROVED` for target
+  `0b552ac0c71367d6389cb9e231a58d11c7f77584`
+- semantic validator votes are preserved as `AGREE, DETERMINISTIC_VIOLATION,
+  AGREE, AGREE, TIMEOUT`; finalization votes are `AGREE` from all five validators.
+
+The read-only reference consumer reread CommitGate, accepted the exact repository
+and target, and rejected a different target. Failed and superseded deployments,
+create attempts, and the earlier evidence-bound semantic failure remain in the proof
+artifact rather than being hidden or retried.
 
 ## Security/trust model
 
