@@ -31,7 +31,7 @@ def main() -> None:
     if proof["release_frozen"]:
         assert proof["provenance_complete"]
         assert proof["bradbury"]["status"] == "FINALIZED_SUCCESS"
-        assert proof["ci"]["exact_head"] is True
+        assert proof["ci"]["release_candidate_ci"]["exact_head"] is True
     print("proof artifacts: consistent")
 
 

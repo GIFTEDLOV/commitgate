@@ -33,8 +33,9 @@ become MODEL_ERROR. Nothing is repaired.
 
 ## Independent validator derivation
 
-The pinned Bradbury-compatible v0.2.12 runner uses `gl.vm.run_nondet` (the renamed unsafe custom
-validator surface). A leader constructs
+Current official documentation recommends `gl.vm.run_nondet_unsafe` for custom
+leader/validator patterns. The pinned Bradbury-compatible v0.2.x runner used by
+the frozen artifact exposes the compatibility surface `gl.vm.run_nondet`. A leader constructs
 and retrieves the authenticated GitHub evidence, hashes exact content, invokes the
 model, and returns only the stable verdict/manifest/digests. Each validator
 independently repeats that complete evidence and semantic path and compares the

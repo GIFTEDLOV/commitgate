@@ -1,6 +1,6 @@
 # Runtime baseline
 
-Reconciled on 2026-08-26 after power-loss recovery. This baseline combines the
+Reconciled on 2026-08-27 after power-loss recovery. This baseline combines the
 current official documentation, the exact cached official runner bundle, and a
 read-only Bradbury schema probe. This repository did not inherit runtime
 assumptions or code from another GenLayer project.
@@ -33,10 +33,12 @@ assumptions or code from another GenLayer project.
   read or write contract storage.
 - Web and LLM calls belong inside an equivalence-principle block. Storage writes,
   contract calls, and message emission happen only after consensus returns.
-- For the Bradbury-compatible v0.2.12 runner, custom leader/validator consensus
-  uses the sandboxed `gl.vm.run_nondet` API. The validator independently
-  refetches and derives the full result; validator exceptions are handled as
-  disagreement and cannot become an accepted result.
+- Current official guidance recommends `gl.vm.run_nondet_unsafe` for custom
+  leader/validator patterns and requires substantive independent verification.
+  The frozen Bradbury-compatible v0.2.x artifact uses its available
+  compatibility surface, `gl.vm.run_nondet`; this API-name difference does not
+  change the validator behavior: it independently refetches and derives the
+  full result, and validator exceptions cannot become an accepted result.
 - Independent verification is substantive: a validator refetches authenticated
   GitHub evidence and independently invokes the semantic evaluator. Checking only
   leader schema or plausibility is forbidden.
@@ -65,12 +67,15 @@ assumptions or code from another GenLayer project.
 ## Authoritative references
 
 - https://docs.genlayer.com/developers/intelligent-contracts/equivalence-principle
+- https://docs.genlayer.com/developers/intelligent-contracts/features/interacting-with-intelligent-contracts
 - https://docs.genlayer.com/developers/intelligent-contracts/features/non-determinism
 - https://docs.genlayer.com/developers/intelligent-contracts/features/web-access
 - https://docs.genlayer.com/developers/intelligent-contracts/features/transaction-context
-- https://docs.genlayer.com/developers/intelligent-contracts/features/interacting-with-intelligent-contracts
 - https://docs.genlayer.com/developers/intelligent-contracts/testing
 - https://docs.genlayer.com/understand-genlayer-protocol/core-concepts/transactions/transaction-statuses
+- https://docs.genlayer.com/understand-genlayer-protocol/core-concepts/transactions/transaction-execution
+- https://docs.genlayer.com/api-references/genlayer-js
+- https://docs.genlayer.com/api-references/genlayer-node/gen/gen_getTransactionReceipt
 - https://docs.genlayer.com/developers/networks
 - https://sdk.genlayer.com/main/_static/ai/api.txt
 - https://github.com/genlayerlabs/genvm-linter

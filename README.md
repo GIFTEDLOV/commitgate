@@ -1,5 +1,22 @@
 # CommitGate
 
+**Challenge-aware exact-commit release authorization with authenticated software evidence and GenLayer consensus.**
+
+[![CI](https://github.com/GIFTEDLOV/commitgate/actions/workflows/ci.yml/badge.svg)](https://github.com/GIFTEDLOV/commitgate/actions/workflows/ci.yml)
+![GenLayer Bradbury 4221](https://img.shields.io/badge/GenLayer-Bradbury%204221-4c6ef5)
+![Bradbury proof complete](https://img.shields.io/badge/Bradbury%20proof-complete-2f9e44)
+
+| Live proof field | Recorded value |
+|---|---|
+| Network | GenLayer Bradbury testnet, chain ID 4221 |
+| Replacement contract | `0x6DaC39672bB4a3a684897FbEf31f131429D28023` |
+| Gate | `074843a3e30066338eec51d1d9e5a23481c6837891608467a402098f1ae43fbc` |
+| Target | `0b552ac0c71367d6389cb9e231a58d11c7f77584` |
+| Verdict | `APPROVE` |
+| Final state | `FINAL_APPROVED` |
+| Proof artifact | [`artifacts/final-release-proof.json`](artifacts/final-release-proof.json) |
+| CI | [GitHub Actions release gates](https://github.com/GIFTEDLOV/commitgate/actions/workflows/ci.yml) |
+
 ## Product
 
 CommitGate is a reusable GenLayer Intelligent Contract that turns authenticated,
@@ -56,13 +73,29 @@ and content digests first; consensus begins only after deterministic admissibili
 7. A challenge is an exact commit-pinned UTF-8 artifact under
    `.commitgate/challenges/`. It is authenticated participant-authored content—not
    automatically true—and opens a guaranteed response window.
-8. Uncontested approval finalizes after the deadline. Challenged approval finalizes
-   only after response adjudication; no response can deterministically reject as a
-   process consequence.
+8. Uncontested approval finalizes after the challenge deadline. A challenge moves the
+   gate to `CHALLENGED`: an APPROVE response becomes `FINAL_APPROVED`, a REJECT
+   response becomes `FINAL_REJECTED`, and an INCONCLUSIVE response keeps the gate
+   challenged while attempts and time remain. If the response deadline expires with
+   no valid response, `finalize_expired_response` deterministically moves the gate to
+   `FINAL_REJECTED` with `FINAL_REJECTED_NO_VALID_RESPONSE`. That is a deterministic
+   process consequence, not a semantic REJECT verdict fabricated by the model.
 9. The downstream consumer synchronously rereads the final exact-target authorization
    before acting and optionally consumes it once.
 
 ## Architecture
+
+| Stage | Controlled result |
+|---|---|
+| Immutable gate terms | Repository, base commit, policy, criteria, review paths, parties, and windows are fixed at creation. |
+| Evidence authentication | Deterministically verify repository identity, commit identity/lineage, exact paths, exact bytes, and hashes. |
+| Evidence manifest | Store a bounded canonical manifest and digest for the authenticated base/target evidence. |
+| Independent adjudication | Leader and every validator independently fetch evidence and derive `APPROVE`, `REJECT`, or `INCONCLUSIVE`. |
+| Challenge/response | `APPROVE` is provisional; challenge evidence and bounded submitter responses control the challenged path. |
+| Final authorization | Deterministic state logic produces an exact-target authorization digest only after finalization. |
+| Downstream consumer | Reread the live gate and authorization immediately before accepting the exact target. |
+
+Consensus proves agreement about interpretation; it does not authenticate evidence.
 
 - [`contracts/commitgate_core.py`](contracts/commitgate_core.py) — pure validation,
   canonicalization, GitHub evidence parsing, hashing, state-transition rules, strict
@@ -81,6 +114,23 @@ Durable states are `CREATED`, `ACTIVE`, `PROVISIONAL_APPROVE`, `CHALLENGED`,
 `FINAL_APPROVED`, and `FINAL_REJECTED`. `ASSESSING` is the explicit execution phase
 but is deliberately not written before consensus. Technical failures remain outside
 business states.
+
+State consequences:
+
+| Durable state | Event | Next durable state | Consequence |
+|---|---|---|---|
+| `CREATED` | `activate_gate` | `ACTIVE` | Gate becomes submit-ready. |
+| `ACTIVE` | Submission `APPROVE` | `PROVISIONAL_APPROVE` | Challenge window opens. |
+| `ACTIVE` | Submission `REJECT` or `INCONCLUSIVE` | `ACTIVE` | Assessment is recorded; another target may be submitted. |
+| `PROVISIONAL_APPROVE` | Challenge window expires uncontested | `FINAL_APPROVED` | Exact target is authorized. |
+| `PROVISIONAL_APPROVE` | `challenge` | `CHALLENGED` | Response window opens. |
+| `CHALLENGED` | Response `APPROVE` | `FINAL_APPROVED` | Exact response target is authorized. |
+| `CHALLENGED` | Response `REJECT` | `FINAL_REJECTED` | Authenticated response establishes rejection. |
+| `CHALLENGED` | Response `INCONCLUSIVE` | `CHALLENGED` | Bounded retry remains possible while time permits. |
+| `CHALLENGED` | Response deadline expires | `FINAL_REJECTED` | `FINAL_REJECTED_NO_VALID_RESPONSE`, a deterministic process consequence. |
+
+`ASSESSING` is not a durable storage state; it describes execution while the
+consensus assessment is in progress.
 
 ## Use
 
@@ -118,6 +168,7 @@ submit_target(gate_id, target_sha) -> submission_id
 challenge(gate_id, challenge_commit_sha, challenge_path) -> challenge_id  # optional
 respond(gate_id, response_target_sha) -> assessment_id                    # if challenged
 finalize_uncontested(gate_id)                                             # if not challenged
+finalize_expired_response(gate_id)                                        # challenged, response deadline expired
 ```
 
 ## Live proof
@@ -188,6 +239,16 @@ Views:
 - `get_assessment(assessment_id) -> canonical JSON`
 - `get_challenge(challenge_id) -> canonical JSON`
 - `get_final_authorization(gate_id) -> canonical JSON or empty string`
+
+Writes:
+
+- `create_gate(...) -> gate_id`
+- `activate_gate(gate_id)`
+- `submit_target(gate_id, target_sha) -> submission_id`
+- `challenge(gate_id, challenge_commit_sha, challenge_path) -> challenge_id`
+- `respond(gate_id, response_target_sha) -> assessment_id`
+- `finalize_uncontested(gate_id)`
+- `finalize_expired_response(gate_id)`
 
 The final authorization digest binds gate ID, repository owner/name, base SHA, final
 target SHA, policy/criteria digest, evidence manifest digest, assessment digest, and

@@ -3,9 +3,10 @@
   "repository": {
     "url": "https://github.com/GIFTEDLOV/commitgate",
     "starting_head": "9d7e5c23eabbfceb4efc8984a5167e464a1c75cc",
-    "final_head": "549bcabf67d9980778f5a5adf5b96ba51cf09fd1",
-    "origin_main": "549bcabf67d9980778f5a5adf5b96ba51cf09fd1",
-    "worktree_clean": true
+    "proof_payload_head": "549bcabf67d9980778f5a5adf5b96ba51cf09fd1",
+    "release_candidate_head": "549bcabf67d9980778f5a5adf5b96ba51cf09fd1",
+    "worktree_clean": true,
+    "provenance_note": "549bcabf67d9980778f5a5adf5b96ba51cf09fd1 is the proof-bearing release-candidate commit (Finalize Bradbury live proof). The later 3f1e711cc669b65039bca2dd3287035e5edd6dc3 commit records provenance-only freeze metadata. The SHA of the commit containing this file is intentionally not embedded because that would be self-referential; the authoritative exact-head CI for the reviewed Git revision is the GitHub Actions check attached to that revision."
   },
   "fixture": {
     "base_commit_sha": "82a3775101d4815392375d22ff0a71feb62c944b",
@@ -273,11 +274,13 @@
     }
   ],
   "ci": {
-    "run_id": "33028692811",
-    "head": "549bcabf67d9980778f5a5adf5b96ba51cf09fd1",
-    "result": "SUCCESS",
-    "exact_head": true,
-    "workflow_dispatch_trigger_commit": "549bcabf67d9980778f5a5adf5b96ba51cf09fd1"
+    "release_candidate_ci": {
+      "run_id": "33028692811",
+      "head": "549bcabf67d9980778f5a5adf5b96ba51cf09fd1",
+      "result": "SUCCESS",
+      "exact_head": true,
+      "workflow_dispatch_trigger_commit": "549bcabf67d9980778f5a5adf5b96ba51cf09fd1"
+    }
   },
   "release_frozen": true,
   "provenance_complete": true
